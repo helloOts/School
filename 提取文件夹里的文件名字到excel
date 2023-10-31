@@ -1,0 +1,18 @@
+
+import os
+import pandas as pd
+
+# 指定图片文件夹路径
+image_folder = '/Users/ots/Desktop/学生数据/图片/图片'  # 请替换为你的图片文件夹路径
+
+# 获取文件夹中的所有文件名
+image_filenames = [f for f in os.listdir(image_folder) if f.endswith(('.png', '.jpg', '.jpeg'))]  # 假设图片是.png, .jpg或.jpeg格式
+
+# 创建一个DataFrame
+df = pd.DataFrame(image_filenames, columns=['Image Filename'])
+
+# 写入Excel文件
+excel_file = '/Users/ots/Desktop/output.xlsx'
+df.to_excel(excel_file, index=False)
+
+print(f'Image filenames have been exported to {excel_file} successfully!')
