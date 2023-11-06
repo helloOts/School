@@ -1,0 +1,40 @@
+import os
+import shutil
+
+
+src_folder='/Users/ots/Desktop/School file/文档/成绩模版/学生数据 10月'
+dest_folder='/Users/ots/Desktop/School file/文档/成绩模版/学生数据 10月'#目标文件夹
+
+def create_folder(folder_name):
+    if not os.path.exists(folder_name):
+        os.makedirs(folder_name)
+
+
+
+
+def move_file(src_path, dest_folder):
+    # 获取原始文件名和扩展名
+    original_filename = os.path.basename(src_path) #basename函数可以去除路径，只保留路径上的文件名字
+    # 构建目标路径
+    dest_path = os.path.join(dest_folder, original_filename)
+    # 移动文件
+    shutil.move(src_path, dest_path)
+
+
+
+def classify_files(src_folder):
+    for root, dirs, files in os.walk(src_folder):
+        for file in files:
+            src_path = os.path.join(root, file)
+            
+            _, file_extension = os.path.splitext(src_path)
+            # 检查文件后缀名是否为 .txt
+            if file_extension.lower() == '.xlsx':
+                move_file(src_path, dest_folder)
+            
+
+classify_files(src_folder)
+
+
+
+
