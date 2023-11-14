@@ -1,0 +1,60 @@
+
+import os
+import pandas as pd
+import re
+
+# 设置文件夹路径
+folder_path = '/Users/ots/Desktop/School file/文档/成绩模版/学生数据 10月'
+
+# 工作表和列的名称
+sheet_name = '雷达图'
+column_name = '跳绳'
+
+# 定义一个函数来提取年级和班级信息
+def extract_grade_class(filename):
+    match = re.match(r'([一二三四五六]+年级)(\d+班)', filename)
+    return match.groups() if match else (None, None)
+
+# 存储所有班级的数据
+class_data = []
+
+# 遍历文件夹中的所有文件
+for filename in os.listdir(folder_path):
+    if filename.endswith('.xlsx'):  # 确保只处理 Excel 文件
+        file_path = os.path.join(folder_path, filename)
+
+        # 提取年级和班级
+        grade, class_num = extract_grade_class(filename)
+        if grade and class_num:
+            data = pd.read_excel(file_path, sheet_name=sheet_name)
+            data[column_name] = pd.to_numeric(data[column_name], errors='coerce')
+
+            # 计算平均值，并保留两位小数
+            average = round(data[column_name].mean(), 2)
+            class_data.append({'年级': grade, '班级': class_num, '平均值': average})
+
+# 创建 DataFrame
+df = pd.DataFrame(class_data)
+
+# 使用 pivot_table 来按年级分列
+pivot_df = df.pivot_table(index='班级', columns='年级', values='平均值')
+
+# 年级排序映射
+grade_order = {'一年级': 1, '二年级': 2, '三年级': 3, '四年级': 4, '五年级': 5, '六年级': 6}
+
+# 根据年级排序
+pivot_df = pivot_df[[grade for grade, _ in sorted(grade_order.items(), key=lambda item: item[1])]]
+
+# 对班级进行排序
+# 提取班级中的数字
+pivot_df.index = pivot_df.index.map(lambda x: int(re.search(r'(\d+)', x).group()))
+# 然后按照班级数字排序
+pivot_df.sort_index(inplace=True)
+
+# 输出到新的 Excel 文件
+
+output_path = f'/Users/ots/Desktop/{column_name}平均值.xlsx'
+
+pivot_df.to_excel(output_path)
+
+print("数据已保存到", output_path)
