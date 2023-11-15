@@ -40,7 +40,7 @@ df = pd.DataFrame(class_data)
 pivot_df = df.pivot_table(index='班级', columns='年级', values='平均值')
 
 # 年级排序映射
-grade_order = {'一年级': 1, '二年级': 2, '三年级': 3, '四年级': 4, '五年级': 5, '六年级': 6}
+#grade_order = {'一年级': 1, '二年级': 2, '三年级': 3, '四年级': 4, '五年级': 5, '六年级': 6}#由于之前设置了罗马数字的年级 所以这一步就不需要了
 
 # 根据年级排序
 pivot_df = pivot_df[[grade for grade, _ in sorted(grade_order.items(), key=lambda item: item[1])]]
