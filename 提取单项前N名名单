@@ -1,0 +1,51 @@
+import os
+import pandas as pd
+import re
+
+folder_path = '/Users/ots/Desktop/School file/文档/成绩模版/学生数据 10月'
+sheet_name = '跳绳'
+# 假设姓名列是第三列，索引为 2
+name_column_index = 2
+# 假设成绩列是第 16 列，索引为 15
+score_column_index = 15
+
+#这个是用来匹配文件夹里的文件名 提取出年级和班级，后悔会用到
+def extract_grade_class(filename):
+    #match = re.match(r'([一二三四五六]+年级)(\d+班)', filename)#这个是匹配中文的
+    match = re.match(r'(\d+年级)(\d+班)', filename)
+    return match.groups() if match else (None, None)
+
+#创建一个学生信息空集
+students_data = []
+for filename in os.listdir(folder_path):#遍历文件路径里的所有文件名
+    if filename.endswith('.xlsx'):#去除其他后缀名文件
+        file_path = os.path.join(folder_path, filename)# 把文件名和之前的路径结合到一起，变成新的文件路径
+        grade, class_num = extract_grade_class(filename)#调用之前制作的函数，提取出年级和班级
+        if grade and class_num: # 这是一个启动语句，只要文件存在就可以进行下一步
+            data = pd.read_excel(file_path, sheet_name=sheet_name)# 读取excel文件中 sheet名字为‘shee_name“的那一个工作表
+            # 通过索引，将数据转换成绩列为数值类型
+            data['成绩'] = pd.to_numeric(data.iloc[:, score_column_index], errors='coerce')
+            # 添加 '年级'、'班级' 和 '姓名' 列
+            data['年级'] = grade
+            data['班级'] = class_num
+            data['姓名'] = data.iloc[:, name_column_index]
+            # 将处理后的数据添加到列表中，并转换成字典
+            students_data.extend(data[['年级', '班级', '姓名', '成绩']].to_dict('records'))
+
+# 创建 DataFrame
+all_students_df = pd.DataFrame(students_data)
+
+#筛选每个年级的前10名学生
+top_students = []
+for grade in sorted(all_students_df['年级'].unique()):  # Sort the grades
+    top_grade_students = all_students_df[all_students_df['年级'] == grade].nlargest(20, '成绩')
+    top_students.extend(top_grade_students.to_dict('records'))
+
+# 创建最终 DataFrame
+top_students_df = pd.DataFrame(top_students)
+
+# 输出到 Excel 文件
+output_path = f'/Users/ots/Desktop/{sheet_name}前10名学生.xlsx'
+top_students_df.to_excel(output_path, index=False)
+
+print("数据已保存到", output_path)
