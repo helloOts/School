@@ -1,0 +1,39 @@
+import os
+import pandas as pd
+import re
+
+folder_path = '/Users/ots/Desktop/School file/文档/成绩模版/学生数据 10月'
+
+def extract_grade_class(filename):
+    match = re.match(r'(\d+年级)(\d+班)', filename)
+    return match.groups() if match else (None, None)
+
+def sort_grade(grade):
+    # 提取年级数字并转换为整数进行排序
+    return int(re.search(r'\d+', grade).group())
+
+def sort_class(class_name):
+    # 提取班级数字并转换为整数进行排序
+    return int(re.search(r'\d+', class_name).group())
+
+grades = {}
+
+for file in os.listdir(folder_path):
+    if file.endswith('.xlsx'):
+        grade, class_name = extract_grade_class(file)
+        if grade and class_name:
+            if grade not in grades:
+                grades[grade] = []
+            grades[grade].append(class_name)
+
+# 对年级和班级进行排序
+for grade in grades:
+    grades[grade].sort(key=sort_class)
+
+# 对年级字典本身进行排序
+sorted_grades = dict(sorted(grades.items(), key=lambda x: sort_grade(x[0])))
+
+df = pd.DataFrame(dict([(k, pd.Series(v)) for k, v in sorted_grades.items()]))
+
+excel_path = '/Users/ots/Desktop/班级名称提取.xlsx'
+df.to_excel(excel_path, index=False)
