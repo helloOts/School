@@ -12,7 +12,7 @@ column_name = '跳绳'
 
 # 定义一个函数来提取年级和班级信息
 def extract_grade_class(filename):
-    match = re.match(r'([一二三四五六]+年级)(\d+班)', filename)
+    match = re.match(r'(\d+年级)(\d+班)', filename)
     return match.groups() if match else (None, None)
 
 # 存储所有班级的数据
