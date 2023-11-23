@@ -1,0 +1,32 @@
+import pandas as pd
+
+def extract_students_below_min_score(data, min_scores):
+    below_min_df = pd.DataFrame(columns=['学生姓名', '所在班级', '运动项目', '运动成绩', '作业检查结果'])
+
+    for (class_name, project), group in data.groupby(['所在班级', '运动项目']):
+        
+        min_score = min_scores.get((class_name, project), min_scores.get(project, None))
+        
+        if min_score is not None:
+            condition = (group['运动成绩'] < min_score) | (group['作业检查结果'] == '假跳')
+            below_min_students = group[condition]
+            
+            if not below_min_students.empty:
+                below_min_df = pd.concat([below_min_df, below_min_students[['学生姓名', '所在班级', '运动项目', '运动成绩', '作业检查结果']]], ignore_index=True)
+
+    return below_min_df
+
+# Example usage
+file_path = '/Users/ots/Downloads/20231123084555_013_学生项目成绩明细表.xlsx'
+data = pd.read_excel(file_path)
+
+min_scores = {
+    ('三年级(7)班', '1分钟跳绳'): 130,  
+    '1分钟跳绳': 140, 
+}
+
+below_min_students_df = extract_students_below_min_score(data, min_scores)
+print(below_min_students_df.to_string())
+
+output_file_path = '/Users/ots/Desktop/below_min_students.xlsx'
+below_min_students_df.to_excel(output_file_path, index=False)
