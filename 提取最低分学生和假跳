@@ -1,4 +1,6 @@
 import pandas as pd
+import tkinter as tk
+from tkinter import filedialog
 
 def extract_students_below_min_score(data, min_scores):
     below_min_df = pd.DataFrame(columns=['学生姓名', '所在班级', '运动项目', '运动成绩', '作业检查结果'])
@@ -16,17 +18,28 @@ def extract_students_below_min_score(data, min_scores):
 
     return below_min_df
 
+def select_file():
+    root = tk.Tk()
+    root.withdraw()  # Hide the main window
+    file_path = filedialog.askopenfilename()  # Show the file dialog
+    return file_path
+
+
 # Example usage
-file_path = '/Users/ots/Downloads/20231123084555_013_学生项目成绩明细表.xlsx'
-data = pd.read_excel(file_path)
+file_path = select_file()
+if file_path:
+    data = pd.read_excel(file_path)
+    min_scores = {
+        ('三年级(7)班', '1分钟跳绳'): 130,  
+        '1分钟跳绳': 140, 
+    }
 
-min_scores = {
-    ('三年级(7)班', '1分钟跳绳'): 130,  
-    '1分钟跳绳': 140, 
-}
+    below_min_students_df = extract_students_below_min_score(data, min_scores)
 
-below_min_students_df = extract_students_below_min_score(data, min_scores)
-print(below_min_students_df.to_string())
+    # 按班级和学生姓名排序
+    sorted_below_min_students_df = below_min_students_df.sort_values(by=['所在班级', '学生姓名'])
 
-output_file_path = '/Users/ots/Desktop/below_min_students.xlsx'
-below_min_students_df.to_excel(output_file_path, index=False)
+    # 保存排序后的DataFrame到Excel文件
+    output_file_path = '/Users/ots/Desktop/最低分数.xlsx'
+    if output_file_path:
+        sorted_below_min_students_df.to_excel(output_file_path, index=False)
