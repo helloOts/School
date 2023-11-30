@@ -1,0 +1,326 @@
+#导入各种依赖库
+
+import tkinter as tk   
+import tkinter.ttk as ttk
+
+# 功能: tkinter 是 Python 的标准图形用户界面 (GUI) 库。它为开发桌面应用程序提供了一个简单的方法。
+# 常用组件: Button, Label, Canvas, Menu, Text, Entry 等。
+# 用途: 可以用来创建窗口、按钮、菜单、文本框、输入框、画布等桌面应用程序的常见组件。  
+from tkinter import filedialog
+
+# filedialog (from tkinter):
+# 功能: filedialog 是 tkinter 中的一个模块，用于显示常用的文件对话框，如打开文件对话框和保存文件对话框。
+# 常用函数: askopenfilename(), asksaveasfilename(), askopenfile(), asksaveasfile() 等。
+# 用途: 当需要让用户选择文件或文件夹时使用。
+import os 
+import openpyxl
+
+from datetime import date
+# 功能: datetime 模块提供了日期和时间的类。
+# 常用组件: datetime, date, time, timedelta, tzinfo 等。
+# 用途: 用于处理日期和时间，例如获取当前日期/时间、日期运算、格式化日期/时间等。
+
+# 新的全局变量
+output_file_path = '/Users/ots/Desktop/打卡统计/111.xlsx'
+
+
+def all_student_list():#导入全体学生名单
+    file_path = "/Users/ots/Desktop/打卡统计/名单.xlsx"  
+    workbook = openpyxl.load_workbook(file_path)
+    sheet = workbook.active
+    students = []
+    
+    for row in sheet.iter_rows(min_row=1, values_only=True):  # 假设第一行是标题行，所以从第二行开始读取
+        name       = row[0]
+        class_name = row[1]
+        reason     = row[2]
+        students.append((name, class_name,reason))
+
+    return students#导入全体学生名单
+
+
+
+
+
+selected_file_path = ""  # 添加一个全局变量来存储选择的文件路径
+
+def settings_window():
+    global output_file_path
+    # 检查之前设置的路径是否仍然存在
+    if output_file_path and os.path.isdir(os.path.dirname(output_file_path)):
+        initial_directory = os.path.dirname(output_file_path)
+    else:
+        initial_directory = None
+
+    selected_directory = filedialog.askdirectory(initialdir=initial_directory)
+
+    if selected_directory:
+        filename = f"打卡统计_{date.today()}.xlsx"
+        output_file_path = os.path.join(selected_directory, filename)
+
+
+
+def load_checked():  # 文件导入 生成当日练习名单
+    global selected_file_path
+    selected_file_path = filedialog.askopenfilename()
+    entry_checked.delete(0, tk.END)
+    entry_checked.insert(0, selected_file_path)
+
+def get_workbook_from_selected_file():
+    if not selected_file_path:
+        # 如果没有选择文件，返回None
+        return None
+    return openpyxl.load_workbook(selected_file_path)
+
+def day_analyze():#每日分析
+    day_list_workbook = get_workbook_from_selected_file()
+    if not day_list_workbook:
+        # 如果没有选择文件，直接返回
+        return
+
+    sheet_file1 = day_list_workbook.active
+
+    #把之前定义的文件赋值到sheet_file1上来 以便进行分析
+    did_students = []#将完成作业的人添加进这个列表
+    did_students_onlyname=[]#创建一个只有名字的列表
+    for row in sheet_file1.iter_rows(min_row=2, values_only=True):  # 假设第一行是标题行，所以从第二行开始读取
+        name = row[1]
+        state = row[9]
+        banji=row[2]
+        if state not in ['未完成', '未开始']:
+            did_students.append((name, state,banji))
+            did_students_onlyname.append((name))
+
+    #导入未打卡名单模版
+    unchecked_filename="/Users/ots/Desktop/打卡统计/未打卡名单.xlsx"
+    workbook = openpyxl.load_workbook(unchecked_filename)
+    worksheet = workbook['Sheet1']
+
+    all_student_list1=all_student_list()#将所有名单赋值到all_student_list
+    
+    row1=5
+    column=2
+    for row in all_student_list1:
+        name = row[0]
+        banji = row[1]
+        reason1= row[2]
+        # 添加这行来跟踪正在检查的数据
+        if name not in did_students_onlyname:  
+            if banji == 3.7:
+                worksheet.cell(row1, column).value = name
+                worksheet.cell(row1, column+1).value = reason1 #这一行是写原因的
+                row1=row1+1
+                
+         #这里是添加最下面的时间
+    worksheet.cell(35, 3).value = date.today()
+
+    row1=5
+    column=6
+    for row in all_student_list1:
+        name = row[0]
+        banji = row[1]
+        reason1= row[2]
+        # 添加这行来跟踪正在检查的数据
+        if name not in did_students_onlyname:  
+            if banji == 5.7:
+                worksheet.cell(row1, column).value = name
+                worksheet.cell(row1, column+1).value = reason1 #这一行是写原因的
+                row1=row1+1
+                
+         #这里是添加最下面的时间
+    worksheet.cell(35, 7).value = date.today()
+
+    row1=5
+    column=10
+    for row in all_student_list1:
+        name = row[0]
+        banji = row[1]
+        reason1= row[2]
+        # 添加这行来跟踪正在检查的数据
+        if name not in did_students_onlyname:  
+            if banji == 5.8:
+                worksheet.cell(row1, column).value = name
+                worksheet.cell(row1, column+1).value = reason1 #这一行是写原因的
+                row1=row1+1
+                
+         #这里是添加最下面的时间
+    worksheet.cell(35, 11).value = date.today()
+
+    row1=5
+    column=14
+    for row in all_student_list1:
+        name = row[0]
+        banji = row[1]
+        reason1= row[2]
+        # 添加这行来跟踪正在检查的数据
+        if name not in did_students_onlyname:  
+            if banji == 1.9:
+                worksheet.cell(row1, column).value = name
+                worksheet.cell(row1, column+1).value = reason1 #这一行是写原因的
+                row1=row1+1
+                
+         #这里是添加最下面的时间
+    worksheet.cell(35, 15).value = date.today()
+
+    # file_dir, file_ext = os.path.split(unchecked_filename)
+    # filename_without_ext, _ = os.path.splitext(file_ext)
+
+    # 创建一个以当前日期为名的新文件名
+    # new_filename = f"{filename_without_ext}_{date.today()}{file_ext}"
+
+    # 创建新文件的完整路径
+    # new_file_path = os.path.join(file_dir, new_filename)
+
+    # # 保存 workbook 到新文件路径
+    workbook.save(output_file_path)
+    
+    # # 在这里添加分析并保存结果的代码
+    # pass
+
+def weekend_analysis():#周末分析
+    day_list_workbook = get_workbook_from_selected_file()
+    if not day_list_workbook:
+        # 如果没有选择文件，直接返回
+        return
+
+    sheet_file1 = day_list_workbook.active
+
+     # 把之前定义的文件赋值到sheet_file1上来 以便进行分析
+    did_students = []#将完成作业的人添加进这个列表
+    did_students_onlyname=[]#创建一个只有名字的列表
+
+    for row in sheet_file1.iter_rows(min_row=2, values_only=True):  # 假设第一行是标题行，所以从第二行开始读取
+        name = row[1]
+        state9 = row[9]
+        state10 = row[10]
+        state11 = row[11]
+        banji = row[2]
+
+        # 计算标记为 "未完成" 或 "未开始" 的状态的数量
+        not_done_count = [state9, state10, state11].count('未完成') + [state9, state10, state11].count('未开始')
+        
+        # 如果这个数量小于或等于1，那么认为学生完成了作业
+        if not_done_count <= 1:
+            did_students.append((name, state9, state10, state11, banji))
+            did_students_onlyname.append((name))
+
+    #导入未打卡名单模版
+    unchecked_filename="/Users/ots/Desktop/打卡统计/未打卡名单.xlsx"
+    workbook = openpyxl.load_workbook(unchecked_filename)
+    worksheet = workbook['Sheet1']
+
+    all_student_list1=all_student_list()#将所有名单赋值到all_student_list
+    row1=5
+    column=2
+    for row in all_student_list1:
+        name = row[0]
+        banji = row[1]
+        reason1= row[2]
+        # 添加这行来跟踪正在检查的数据
+        if name not in did_students_onlyname:  
+            if banji == 3.7:
+                worksheet.cell(row1, column).value = name
+                worksheet.cell(row1, column+1).value = reason1 #这一行是写原因的
+                row1=row1+1
+                # print(name)
+         #这里是添加最下面的时间
+    worksheet.cell(35, 3).value = date.today()
+
+    row1=5
+    column=6
+    for row in all_student_list1:
+        name = row[0]
+        banji = row[1]
+        reason1= row[2]
+        # 添加这行来跟踪正在检查的数据
+        if name not in did_students_onlyname:  
+            if banji == 5.7:
+                worksheet.cell(row1, column).value = name
+                worksheet.cell(row1, column+1).value = reason1 #这一行是写原因的
+                row1=row1+1
+                
+         #这里是添加最下面的时间
+    worksheet.cell(35, 7).value = date.today()
+
+    row1=5
+    column=10
+    for row in all_student_list1:
+        name = row[0]
+        banji = row[1]
+        reason1= row[2]
+        # 添加这行来跟踪正在检查的数据
+        if name not in did_students_onlyname:  
+            if banji == 5.8:
+                worksheet.cell(row1, column).value = name
+                worksheet.cell(row1, column+1).value = reason1 #这一行是写原因的
+                row1=row1+1
+                
+         #这里是添加最下面的时间
+    worksheet.cell(35, 11).value = date.today()
+
+    row1=5
+    column=14
+    for row in all_student_list1:
+        name = row[0]
+        banji = row[1]
+        reason1= row[2]
+        # 添加这行来跟踪正在检查的数据
+        if name not in did_students_onlyname:  
+            if banji == 1.9:
+                worksheet.cell(row1, column).value = name
+                worksheet.cell(row1, column+1).value = reason1 #这一行是写原因的
+                row1=row1+1
+                
+         #这里是添加最下面的时间
+    worksheet.cell(35, 15).value = date.today()
+
+    workbook.save(output_file_path)
+
+
+   
+
+
+
+# print(weekend_analysis())
+
+# ... [其它代码保持不变]
+
+# ... [之前的代码部分保持不变]
+
+# 创建界面
+root = tk.Tk()
+root.title("Check Check")
+
+# 设置窗口的大小
+root.geometry("550x150")  # 调整窗口大小
+
+# 创建菜单条
+menu_bar = tk.Menu(root)
+root.config(menu=menu_bar)
+
+# 创建设置菜单并添加到菜单条
+settings_menu = tk.Menu(menu_bar, tearoff=0)
+menu_bar.add_cascade(label="设置", menu=settings_menu)
+settings_menu.add_command(label="设置输出路径", command=settings_window)
+
+# 创建一个 LabelFrame 用于包含输入框和按钮
+frame = ttk.LabelFrame(root, text="打卡分析", padding=(10, 5))
+frame.pack(pady=20, padx=20, fill=tk.BOTH, expand=True)
+
+# 使用 Grid 布局
+entry_checked = ttk.Entry(frame, width=40)  # 调整输入框宽度
+entry_checked.grid(row=0, column=0, pady=10, padx=10, sticky='w', columnspan=2)
+
+# 使 "选择" 按钮与其文字宽度匹配，并放置在文件路径显示框的右侧
+ttk.Button(frame, text="选择", command=load_checked).grid(row=0, column=2, pady=10, padx=10)
+
+# 设计一个更美观的按钮样式
+style = ttk.Style()
+style.configure("TButton", font=('Arial', 10, 'bold'), background='#e0e0e0', foreground='#333', borderwidth=1)
+style.map("TButton", background=[('active', '#d0d0d0')])
+
+# 调整按钮文本和布局
+ttk.Button(frame, text="每日处理", command=day_analyze, style="TButton").grid(row=1, column=0, columnspan=1, pady=5, padx=10, sticky='ew')
+ttk.Button(frame, text="周末分析", command=weekend_analysis, style="TButton").grid(row=1, column=1, columnspan=2, pady=5, padx=10, sticky='ew')
+
+root.mainloop()
