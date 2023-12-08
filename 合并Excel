@@ -1,0 +1,26 @@
+import os
+import pandas as pd
+
+# 设置文件夹路径
+folder_path = '/Users/ots/Desktop/学生信息'
+
+# 初始化一个空列表来存储所有文件的内容
+data_frames = []
+
+# 遍历文件夹中的每个文件
+for filename in os.listdir(folder_path):
+    file_path = os.path.join(folder_path, filename)
+    # 确保它是文件而不是文件夹
+    if os.path.isfile(file_path):
+        try:
+            data = pd.read_excel(file_path)
+            # 将DataFrame添加到列表
+            data_frames.append(data)
+        except Exception as e:
+            print(f"无法读取文件 {file_path}: {e}")
+
+# 使用concat合并所有数据帧
+all_data = pd.concat(data_frames, ignore_index=True)
+
+# 保存到一个新的Excel文件
+all_data.to_excel('/Users/ots/Desktop/merged_data.xlsx', index=False)
