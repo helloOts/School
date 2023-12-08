@@ -1,0 +1,51 @@
+import os
+import pandas as pd
+import re
+
+# 正则表达式，用于提取文件名中的班级信息，如 "2.8" 或 "2.10"
+class_pattern = re.compile(r'(\d+\.\d+)')
+
+folder_path = '/Users/ots/Desktop/趣味运动会/立定跳远/六年级跳绳名单' # 指定文件夹路径
+files = os.listdir(folder_path)
+
+all_data = []  # 用于存储所有提取数据的列表
+
+for file in files:
+    if file.endswith('.xlsx'):
+        # 从文件名提取班级信息
+        class_search = class_pattern.search(file)
+        if class_search:
+            class_name = class_search.group(1)  # 获取匹配的班级信息
+            file_path = os.path.join(folder_path, file)
+
+            try:
+                # 读取 Excel 文件
+                data = pd.read_excel(file_path)
+
+                # 提取姓名和成绩
+                # 此处需要根据实际的列名调整
+                names_column_1 = data.iloc[3:33, 1].dropna()  # 假设姓名在第二列
+                scores_column_1 = data.iloc[3:33, 4]  # 假设成绩在第三列
+                names_column_2 = data.iloc[3:33, 6].dropna()  # 假设姓名在第七列
+                scores_column_2 = data.iloc[3:33, 9]  # 假设成绩在第八列
+
+                # 将姓名和成绩信息添加到列表中
+                for name, score in zip(names_column_1, scores_column_1):
+                    all_data.append({'Class': class_name, 'Name': name, 'Score': score})
+                for name, score in zip(names_column_2, scores_column_2):
+                    all_data.append({'Class': class_name, 'Name': name, 'Score': score})
+            except Exception as e:
+                print(f"处理文件 {file} 时出错: {e}")
+
+# 将列表转换为 DataFrame
+all_data_df = pd.DataFrame(all_data)
+
+# 对数据按班级进行排序
+all_data_df['Class'] = all_data_df['Class'].astype(float)  # 确保班级是浮点数格式
+all_data_df.sort_values(by='Class', inplace=True)
+
+# 指定新文件的路径
+new_file_path = '/Users/ots/Desktop/6年级立定跳远成绩汇总.xlsx'
+all_data_df.to_excel(new_file_path, index=False)
+
+print("数据提取完成，保存至", new_file_path)
