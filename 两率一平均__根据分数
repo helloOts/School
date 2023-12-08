@@ -1,0 +1,79 @@
+import pandas as pd
+import os
+import re
+import tkinter as tk
+from tkinter import filedialog
+
+# 定义不同年级的优生和及格标准
+standards = {
+    '一年级': {'优生': 80, '及格': 60},
+    '二年级': {'优生': 80, '及格': 60},
+    '三年级': {'优生': 80, '及格': 60},
+    '四年级': {'优生': 80, '及格': 60},
+    '五年级': {'优生': 80, '及格': 60},
+    '六年级': {'优生': 80, '及格': 60},
+    # ... 更多年级的标准
+}
+
+grade_mapping = {'一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6}
+
+def select_folder():
+    root = tk.Tk()
+    root.withdraw()  # 不显示主窗口
+    folder_path = filedialog.askdirectory()  # 显示文件夹选择对话框
+    return folder_path
+folder_path = select_folder()
+summary_df = pd.DataFrame()
+
+def process_file(file_path):
+    df = pd.read_excel(file_path, sheet_name='50米', engine='openpyxl',skiprows=3)
+    class_name = os.path.splitext(os.path.basename(file_path))[0]
+    best_scores = pd.to_numeric(df[16], errors='coerce')
+    best_scores = best_scores.dropna()
+
+    match = re.match(r'(一|二|三|四|五|六)年级(\d+)班', class_name)
+    if match:
+        grade = match.group(1)
+        class_num = int(match.group(2))
+        grade_standard = standards.get(grade + '年级', {'优生': 80, '及格': 60})
+    else:
+        grade, class_num = '未知', 0
+        grade_standard = {'优生': 80, '及格': 60}
+
+    outstanding_count = best_scores[best_scores >= grade_standard['优生']].count()
+    pass_count = best_scores[best_scores >= grade_standard['及格']].count()
+    total_students = len(best_scores)
+
+    outstanding_rate = "{:.2f}%".format(outstanding_count / total_students * 100)
+    pass_rate = "{:.2f}%".format(pass_count / total_students * 100)
+    average_score = "{:.2f}".format(best_scores.mean())
+
+    results_df = pd.DataFrame({
+        '班级': [grade + '年级' + str(class_num) + '班'],
+        '年级数字': [grade_mapping.get(grade, 0)],
+        '班级数字': [class_num],
+        '优生率': [outstanding_rate],
+        '及格率': [pass_rate],
+        '平均成绩': [average_score]
+    })
+
+    return results_df
+
+
+summary_df = pd.DataFrame()
+
+for file_name in os.listdir(folder_path):
+    if file_name.endswith('.xlsx'):
+        file_path = os.path.join(folder_path, file_name)
+        results_df = process_file(file_path)
+        summary_df = summary_df._append(results_df, ignore_index=True)
+
+# 按年级和班级的数值排序
+summary_df = summary_df.sort_values(by=['年级数字', '班级数字'])
+
+# 删除辅助排序的列
+summary_df.drop(['年级数字', '班级数字'], axis=1, inplace=True)
+
+summary_output_path = '/Users/ots/Desktop/Summary_Results.xlsx'
+summary_df.to_excel(summary_output_path, index=False)
+print(f"汇总结果已保存到 {summary_output_path}")
