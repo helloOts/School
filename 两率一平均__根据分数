@@ -26,7 +26,7 @@ folder_path = select_folder()
 summary_df = pd.DataFrame()
 
 def process_file(file_path):
-    df = pd.read_excel(file_path, sheet_name='50米', engine='openpyxl',skiprows=3)
+    df = pd.read_excel(file_path, sheet_name='50米', engine='openpyxl',skiprows=0)
     class_name = os.path.splitext(os.path.basename(file_path))[0]
     best_scores = pd.to_numeric(df[16], errors='coerce')
     best_scores = best_scores.dropna()
