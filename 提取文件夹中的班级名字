@@ -1,0 +1,40 @@
+import os
+import pandas as pd
+import re
+
+folder_path = '/Users/ots/Desktop/仰卧起坐抽测'
+
+def extract_grade_class(filename):
+    match = re.match(r'(一|二|三|四|五|六)年级(\d+)班', filename)
+    if match:
+        grade_chinese_to_number = {'一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6}
+        grade_number = grade_chinese_to_number[match.group(1)]
+        class_number = int(match.group(2))
+        return grade_number, class_number
+    return None, None
+
+grades = {}
+
+for file in os.listdir(folder_path):
+    if file.endswith('.xlsx'):
+        grade, class_name = extract_grade_class(file)
+        if grade is not None and class_name is not None:
+            if grade not in grades:
+                grades[grade] = []
+            grades[grade].append(class_name)
+
+# 对每个年级内的班级进行排序
+for grade in grades:
+    grades[grade].sort()
+
+# 对年级字典本身进行排序
+sorted_grades = dict(sorted(grades.items()))
+
+# 将年级数字转换回中文
+number_to_grade_chinese = {1: '一年级', 2: '二年级', 3: '三年级', 4: '四年级', 5: '五年级', 6: '六年级'}
+final_grades = {number_to_grade_chinese[grade]: classes for grade, classes in sorted_grades.items()}
+
+df = pd.DataFrame(dict([(k, pd.Series(v)) for k, v in final_grades.items()]))
+
+excel_path = '/Users/ots/Desktop/班级名称提取.xlsx'
+df.to_excel(excel_path, index=False)
